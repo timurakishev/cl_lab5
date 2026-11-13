@@ -335,3 +335,27 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 @media(max-width:760px){.cl5-analysis-pair{grid-template-columns:1fr;gap:12px;}}
 /* Give PDF section titles enough room even in print engines with older flex sizing. */
 .cl5-report-shell .report-section-head h2 {flex:1 1 auto;min-width:0;width:90%;}
+
+/* Lab 5 layout refinements. */
+.cl5-pagehead {justify-content:flex-start;}
+.cl5-page-title {display:flex;align-items:baseline;gap:15px;flex-wrap:wrap;}
+.cl5-page-title .cl5-kicker {margin:0;flex:none;}
+.cl5-page-title h1 {font-size:clamp(26px,3vw,33px);line-height:1.25;letter-spacing:-.025em;}
+.cl5-foot {display:flex;justify-content:center;align-items:center;gap:15px;}
+.cl5-foot .cl5-btn {min-width:145px;min-height:46px;text-align:center;font-weight:700;}
+.cl5-foot .cl5-btn:disabled {opacity:.45;cursor:default;}
+.cl5-confirm-actions {display:flex;justify-content:flex-end;gap:12px;margin-top:24px;}
+.cl5-verdict {margin-top:6px;padding-top:26px;}
+.cl5-verdict .cl5-question {margin:5px 0 12px;font-size:16px;}
+.cl5-verdict>.cl5-field {max-width:none;}
+.cl5-verdict>.cl5-field:first-of-type {max-width:540px;}
+.cl5-pagefoot {display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;}
+@media(max-width:760px){
+  .cl5-page-title {gap:10px;}
+  .cl5-page-title h1 {font-size:clamp(25px,5vw,31px);}
+}
+@media(max-width:440px){
+  .cl5-foot .cl5-btn {min-width:114px;}
+  .cl5-confirm-actions {justify-content:space-between;}
+  .cl5-confirm-actions .cl5-btn{min-width:0;}
+}

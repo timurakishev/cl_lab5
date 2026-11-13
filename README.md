@@ -1,10 +1,16 @@
 # Lab 5 — Corpus Platform Review
 
-A browser-based lab for LING3306 Corpus Linguistics. Students examine two assigned corpus platforms, run searches, attach screenshots, and write a comparison using the criteria in Akishev (2026).
+An eight-step research lab for LING3306 Corpus Linguistics. Students examine two assigned corpus platforms together, run searches, attach screenshots and evaluate the platforms using Akishev (2026).
 
-## Notes
+## Website
 
-Drafts save in the student's browser. Reports can be downloaded as PDFs or printed. Email submission is not enabled. Paste warnings are browser-based and should be checked before grading.
+The site runs from the repository root on GitHub Pages. No build step is needed.
+
+## Submissions
+
+Students submit a PDF directly from the final step. Email delivery requires the separate Cloudflare Worker in [`submission-worker/`](submission-worker/README.md). After deploying it, add its URL to `config.js`. Until then, the submit button is disabled.
+
+The report is generated locally without an external PDF library. Drafts save in the browser. Copy/paste restrictions are browser-level deterrents, not proof of misconduct.
 
 ## Reference
 

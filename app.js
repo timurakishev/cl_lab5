@@ -10,12 +10,12 @@
   const defs = [
     { key:'start', title:'Students and corpora', short:'Setup' },
     { key:'a_profile', title:'Sources and content', short:'Overview', min:80 },
-    { key:'a_trial', title:'Try the search tools', short:'Searches', min:120 },
+    { key:'a_trial', title:'Analytical features', short:'Analysis', min:120 },
     { key:'b_profile', title:'Sources and content', short:'Overview', min:80 },
-    { key:'b_trial', title:'Try the search tools', short:'Searches', min:120 },
+    { key:'b_trial', title:'Analytical features', short:'Analysis', min:120 },
     { key:'inventory', title:'Features and documentation', short:'Tools', min:120 },
     { key:'comparison', title:'Evaluate the interfaces', short:'Evaluation', min:140 },
-    { key:'review', title:'Review and download', short:'Report' },
+    { key:'review', title:'Review and submit', short:'Report' },
   ];
   const criteria = [
     { key:'presence', label:'Presence or absence', description:'Do the platforms offer the tools you needed?', options:['Not assessed','Most tools present','Some tools present','Few tools present','Not available'] },
@@ -30,8 +30,8 @@
     {key:'repeat',label:'Reproducibility',hint:'Can others repeat a search?',options:['Not tested','Easy','With limits','Difficult']},
   ];
   const corpusName = side => (state[side==='a'?'aName':'bName']||`Corpus ${side.toUpperCase()}`).trim();
-  const taskTitle = i => i===1?`${corpusName('a')} — sources and content`:i===2?`${corpusName('a')} — search tools`:i===3?`${corpusName('b')} — sources and content`:i===4?`${corpusName('b')} — search tools`:defs[i].title;
-  const taskShort = i => (i>=1&&i<=4)?`${i<3?corpusName('a'):corpusName('b')} · ${i%2?'Overview':'Searches'}`:defs[i].short;
+  const taskTitle = i => i===1?`${corpusName('a')} — sources and content`:i===2?`${corpusName('a')} — analytical features`:i===3?`${corpusName('b')} — sources and content`:i===4?`${corpusName('b')} — analytical features`:defs[i].title;
+  const taskShort = i => (i>=1&&i<=4)?`${i<3?corpusName('a'):corpusName('b')} · ${i%2?'Overview':'Analysis'}`:defs[i].short;
   const featureNames = [
     ['frequency','Frequency lists'], ['concordance','Concordances / KWIC'],
     ['keywords','Keyword lists / keyness'], ['collocations','Collocation analysis'],
@@ -71,6 +71,7 @@
   let busy = false;
   let lastPasteAt = 0;
   let toastTimer;
+  let saveErrorShown=false;
   const $ = selector => document.querySelector(selector);
   const work = $('#cl5-work');
   const progress = $('#cl5-progress-rule');
@@ -83,10 +84,9 @@
   function autosave() {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
-      $('#cl5-save-label').textContent = 'Draft saved on this device';
+      saveErrorShown=false;
     } catch(_) {
-      $('#cl5-save-label').textContent = 'Local storage unavailable — export a backup';
-      toast('Draft could not be saved locally. Export a backup.');
+      if(!saveErrorShown){toast('Your browser could not save the draft on this device.');saveErrorShown=true;}
     }
   }
   function toast(message) {
@@ -102,17 +102,17 @@
     const val = safe(state[key] || '');
     return `<div class="cl5-field"><label for="cl5-${key}">${label}${options.required?' *':''}</label><input id="cl5-${key}" type="${options.type||'text'}" data-property="${key}" value="${val}" placeholder="${safe(placeholder)}" autocomplete="off" ${options.required?'required':''}></div>`;
   }
-  function textarea(key,min) {
-    return `<div class="cl5-field"><label for="cl5-answer">Your answer</label>
-      <textarea id="cl5-answer" class="cl5-writing" data-answer="${key}" spellcheck="true" placeholder="Describe what you found, with examples.">${safe(state.answer[key] || '')}</textarea>
+  function textarea(key,min,label='Your answer',placeholder='Describe what you found, with examples.') {
+    return `<div class="cl5-field"><label for="cl5-answer">${safe(label)}</label>
+      <textarea id="cl5-answer" class="cl5-writing" data-answer="${key}" spellcheck="true" placeholder="${safe(placeholder)}">${safe(state.answer[key] || '')}</textarea>
       <div class="cl5-count" data-short="${count(key)<min}"><span id="cl5-wc">${count(key)} words</span><span>Minimum: ${min} words</span></div>
       </div>`;
   }
   function evidence(key, requiredImage=false, details='Link to the page or search result you used.') {
     const data = state.screenshot[key];
     return `<section class="cl5-evidence"><h3>Sources and screenshots</h3>
-      <div class="cl5-field"><label for="cl5-source">Source URL *</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
-      <div class="cl5-field"><label for="cl5-image">Screenshot ${requiredImage?'*':'(optional)'}</label>
+      <div class="cl5-field"><label for="cl5-source">${key==='inventory'?'Documentation / feature URL *':'Corpus description / methodology URL *'}</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
+      <div class="cl5-field"><label for="cl5-image">${requiredImage?'Upload screenshots *':'Screenshot (optional)'}</label>
        <div class="cl5-upload"><input id="cl5-image" data-image="${key}" type="file" accept="image/png,image/jpeg,image/webp"></div>
        ${data ? `<img class="cl5-thumbnail" src="${data.data}" alt="Uploaded evidence screenshot"><span class="cl5-help">Attached: ${safe(data.name)}</span> <button class="cl5-link-danger" type="button" data-remove-image="${key}">Remove screenshot</button>` : `<small>${requiredImage?'Required: show your actual search and results.':'Add evidence from the corpus interface when useful.'} Screenshots are compressed and included in the PDF report.</small>`}
        </div></section>`;
@@ -127,25 +127,25 @@
   }
   function setup() {
     return header('Students and corpora',1,
-      "Enter both students' names and the two corpus platforms assigned to you.") +
+      "Enter both students' names and the two assigned corpora. Work together: both students should explore both platforms, discuss what they find, and then write their answers.") +
       `<div class="cl5-duo">${input('name1','Student 1 — full name','',{required:true})}${input('name2','Student 2 — full name','',{required:true})}</div><hr class="cl5-rule">`+
       `<div class="cl5-duo">${input('aName','Corpus A — name','',{required:true})}${input('aUrl','Corpus A — website','https://',{type:'url',required:true})}</div>`+
       `<div class="cl5-duo">${input('bName','Corpus B — name','',{required:true})}${input('bUrl','Corpus B — website','https://',{type:'url',required:true})}</div>`+
-      `<p class="cl5-help">Read Table 1 of Akishev (2026) before starting.</p>`+
-      `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools. Each blocked paste attempt carries a <strong>50-point deduction</strong> (maximum 100). Names, URLs and search queries may be pasted. Contact your instructor if you need an accessibility accommodation.</div>`;
+      `<p class="cl5-help">Read Table 1 of Akishev (2026) before starting.</p>`;
   }
   function profile(which) {
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name} — sources and content`,which==='A'?2:4,prompt)+
-      textarea(key,80)+evidence(key,false,'Link to the corpus description or methodology.');
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools. Each blocked paste attempt carries a <strong>50-point deduction</strong> (maximum 100). Names, URLs and search queries may be pasted. Pasting URLs is allowed and does not count toward the deduction. Your progress will be stored on your device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      textarea(key,80)+evidence(key,false,'Paste the URL of the official corpus description or methodology page. It should explain the corpus content and how the data were collected.');
   }
   function trial(which) {
     const side=which.toLowerCase(),key=side+'_trial',name=corpusName(side);
-    const prompt=`Run <strong>two different analyses</strong> in <strong>${safe(name)}</strong>, such as a concordance and a collocation search. Record your queries and settings. Describe the results and any problems you encountered. Upload a screenshot.`;
-    return header(`${name} — search tools`,which==='A'?3:5,prompt)+
+    const prompt=`Explore all four analytical features discussed in Akishev (2026): frequency lists, concordances, keyword lists, and collocations. Test <strong>two</strong> of these features in <strong>${safe(name)}</strong>. Record the queries and settings, discuss what you found, and upload screenshots of both analyses. If a feature is unavailable, note that in Task 6.`;
+    return header(`${name} — analytical features`,which==='A'?3:5,prompt)+
       `<div class="cl5-analysis-pair"><div class="cl5-analysis-item">${queryField(key,1)}${screenshotField(key,1)}</div><div class="cl5-analysis-item">${queryField(key,2)}${screenshotField(key,2)}</div></div>`+
-      textarea(key,120)+`<section class="cl5-evidence"><h3>Source</h3><div class="cl5-field"><label for="cl5-source">Result or tool URL *</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key]||'')}" placeholder="https://..."></div></section>`;
+      textarea(key,120,'What did the two analyses show?','Explain the results of each analysis, what the tools showed, and any problems you encountered.');
   }
   function optionsHTML(options,selected) {
     return options.map(v=>`<option value="${safe(v)}" ${selected===v?'selected':''}>${safe(v)}</option>`).join('');
@@ -159,8 +159,8 @@
     const support=supportFeatures.map(x=>matrixRow(x.label,x.hint,'support',x.key,x.options)).join('');
     const columns=`<div class="cl5-feature-head"><span>What to check</span><span>${safe(corpusName('a'))}</span><span>${safe(corpusName('b'))}</span></div>`;
     return header('Features and documentation',6,
-      `Check the tools in both platforms. Then look at their documentation, data sources, AI/NLP support and options for repeating a search. Select what you found, then explain any important differences.`)+
-      `<div class="cl5-matrix"><h3>Search and analysis</h3>${columns}${tools}<p class="cl5-help">Check at least four tools in each platform.</p>`+
+      `Explore all listed analytical features in both platforms. Check the documentation, data sources, AI/NLP tools and reproducibility. Select what you found and explain the main differences.`)+
+      `<div class="cl5-matrix"><h3>Search and analytical features</h3>${columns}${tools}<p class="cl5-help">Explore all six features in both platforms. Record what is available and what is missing or restricted.</p>`+
       `<h3 class="cl5-matrix-divider">Research support</h3>${columns}${support}</div>`+
       `<div class="cl5-writing-prompt"><strong>What did you find?</strong><span>Comment on the documentation, corpus sources, AI/NLP features (if any), and whether you could reproduce your searches. Include specific examples.</span></div>`+
       textarea('inventory',120)+evidence('inventory',false,'Link to the documentation or a relevant feature page.');
@@ -181,10 +181,9 @@
     return header('Evaluate the interfaces',7,
       'Use the four criteria from <strong>Akishev (2026, Table 1)</strong>. Make a selection for each corpus, then explain it using evidence from your searches. These are descriptions, not numerical ratings.')+
       `<div class="cl5-criteria">${criteria.map(criterionBlock).join('')}</div>`+
-      `<section class="cl5-verdict"><div class="cl5-section-number">Final decision</div><h3>Which platform would you use?</h3>`+
+      `<section class="cl5-criterion cl5-verdict"><div class="cl5-criterion-top"><span class="cl5-criterion-index">05</span><div><h3>Which platform would you use?</h3><p>Make a final choice based on the four criteria above.</p></div></div>`+
       `<div class="cl5-field"><label for="cl5-decision">Your choice</label><select id="cl5-decision" data-decision>${decisionOptions.map(([value,label])=>`<option value="${safe(value)}" ${state.decision===value?'selected':''}>${safe(label)}</option>`).join('')}</select></div>`+
-      `<p class="cl5-question">Explain your choice. Suggest one improvement for each platform and mention one limitation of your comparison.</p>`+
-      textarea('comparison',140)+evidence('comparison',false,'Link to a source or result you referred to.');
+      `<div class="cl5-field"><label for="cl5-answer">Explain your choice</label><p class="cl5-question">Support your choice with evidence. Suggest one improvement for each platform and mention one limitation of your comparison.</p><textarea id="cl5-answer" class="cl5-writing" data-answer="comparison" spellcheck="true" placeholder="Compare the platforms and explain your decision.">${safe(state.answer.comparison||'')}</textarea><div class="cl5-count" data-short="${count('comparison')<140}"><span id="cl5-wc">${count('comparison')} words</span><span>Minimum: 140 words</span></div></div></section>`;
   }
   function validation() {
     const issues=[];
@@ -194,7 +193,7 @@
       if (!isHttp(state[k])) issues.push(`Enter a valid ${label}.`);
     for (const d of defs.filter(x=>x.min))
       if (count(d.key)<d.min) issues.push(`${d.key==='comparison'?'Final decision':d.key==='inventory'?'Features and documentation':d.key.startsWith('a_')?corpusName('a')+': '+d.short:corpusName('b')+': '+d.short}: ${count(d.key)} / ${d.min} words.`);
-    for (const k of ['a_profile','a_trial','b_profile','b_trial','inventory','comparison'])
+    for (const k of ['a_profile','b_profile','inventory'])
       if (!isHttp(state.source[k])) issues.push(`${k==='inventory'?'Features and documentation':k==='comparison'?'Evaluation':k.startsWith('a_')?corpusName('a'):corpusName('b')}: add a source link.`);
     for (const k of ['a_trial','b_trial']) {
       for(const i of [1,2]){
@@ -203,8 +202,9 @@
       }
     }
     for (const pfx of ['a','b']) {
-      if (featureNames.filter(([key])=>(state.features[pfx+'_'+key]||'Not tested')!=='Not tested').length<4)
-        issues.push(`Check at least four tools in ${corpusName(pfx)}.`);
+      for(const [key,label] of featureNames)
+        if(!state.features[pfx+'_'+key] || state.features[pfx+'_'+key]==='Not tested')
+          issues.push(`${corpusName(pfx)}: assess ${label.toLowerCase()}.`);
       for(const item of supportFeatures)if(!state.support[pfx+'_'+item.key] || state.support[pfx+'_'+item.key]==='Not tested')
         issues.push(`${corpusName(pfx)}: assess ${item.label.toLowerCase()}.`);
     }
@@ -218,14 +218,13 @@
   function review() {
     const issues=validation();
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
-    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).length} screenshots · ${Object.values(state.source).filter(isHttp).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
-    return header('Review and download',8,'Check your answers and download the PDF report.')+
+    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).length} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
+    return header('Review and submit',8,'Check your answers before sending the report to your instructor.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
-      `<h3>${issues.length?'Before downloading':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
+      `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
       `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots. Sources are cited.</span></label>`+
-      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${issues.length||!state.consent?'disabled':''}>Download PDF report</button><button type="button" class="cl5-btn cl5-btn-light" id="cl5-print" ${issues.length||!state.consent?'disabled':''}>Print / Save as PDF</button>${CONFIG.submissionEndpoint?`<button type="button" class="cl5-btn cl5-btn-light" id="cl5-submit" ${issues.length||!state.consent||state.submitted?'disabled':''}>${state.submitted?'Submitted':'Send to instructor'}</button>`:''}</div>`+
-      (CONFIG.submissionEndpoint?`<div class="cl5-field"><label for="cl5-code">Submission code</label><input id="cl5-code" type="password" autocomplete="off" placeholder="Code from your instructor"></div>`:'')+
-      `<details class="cl5-backup"><summary>Backup options</summary><div class="cl5-secondary-row"><button type="button" class="cl5-btn cl5-btn-light" data-export-draft>Download draft (.json)</button><button type="button" class="cl5-btn cl5-btn-light" data-open-draft>Open a saved draft</button>${state.submitted?'<button type="button" class="cl5-btn cl5-btn-light" data-new-pair>New report</button>':''}<input type="file" id="cl5-import" accept="application/json,.json" hidden></div><p class="cl5-help">A draft can be reopened on this device or another computer.</p></details>`;
+      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-submit" ${issues.length||!state.consent||state.submitted||!CONFIG.submissionEndpoint?'disabled':''} title="${CONFIG.submissionEndpoint?'Send your completed PDF report':'Submission has not been enabled by the instructor'}">${state.submitted?'Submitted':'Send to instructor'}</button></div>`+
+      (CONFIG.submissionEndpoint?`<div class="cl5-field"><label for="cl5-code">Submission code</label><input id="cl5-code" type="password" autocomplete="off" placeholder="Code from your instructor"></div>`:'');
   }
   function render() {
     const step=state.step;
@@ -239,7 +238,12 @@
   }
   function go(next) { state.step=Math.min(defs.length-1,Math.max(0,next)); render(); root.scrollIntoView({behavior:'instant',block:'start'}); }
   $('#cl5-back').addEventListener('click',()=>go(state.step-1));
-  $('#cl5-next').addEventListener('click',()=>go(state.step===defs.length-1?0:state.step+1));
+  $('#cl5-next').addEventListener('click',()=>{
+    if(state.step===0){$('#cl5-start-confirm').showModal();return;}
+    go(state.step===defs.length-1?0:state.step+1);
+  });
+  $('#cl5-confirm-cancel').addEventListener('click',()=>$('#cl5-start-confirm').close());
+  $('#cl5-confirm-continue').addEventListener('click',()=>{$('#cl5-start-confirm').close();go(1);});
   $('#cl5-framework-open').addEventListener('click',()=>$('#cl5-dialog').showModal());
   $('#cl5-dialog-close').addEventListener('click',()=>$('#cl5-dialog').close());
   $('#cl5-dialog').addEventListener('click',e=>{if(e.target.id==='cl5-dialog')e.target.close();});
@@ -261,16 +265,10 @@
   work.addEventListener('change',async e=>{
     if(e.target.dataset.image) await storeImage(e.target.dataset.image,e.target.files?.[0]);
     else if(e.target.matches('input,textarea,select'))updateValue(e.target);
-    if(e.target.id==='cl5-import')await restoreDraft(e.target.files?.[0]);
   });
   work.addEventListener('click',async e=>{
     const target=e.target.closest('button');if(!target)return;
     if(target.dataset.removeImage){delete state.screenshot[target.dataset.removeImage];render();}
-    else if(target.hasAttribute('data-export-draft'))exportDraft();
-    else if(target.hasAttribute('data-open-draft'))$('#cl5-import')?.click();
-    else if(target.hasAttribute('data-new-pair')){if(confirm('Start a new report? Export the current draft first if you need a copy.')){state=initial();accessCode='';render();}}
-    else if(target.id==='cl5-download')await downloadPdf();
-    else if(target.id==='cl5-print')printPdf();
     else if(target.id==='cl5-submit')await submit();
   });
   // The restriction is intentionally limited to written answers; names, search
@@ -305,82 +303,16 @@
       render();toast('Screenshot attached and saved locally.');
     } catch(_) {toast('Could not read that screenshot. Try a PNG or JPG.');}
   }
-  function exportDraft(){
-    const data=JSON.stringify(state,null,2);
-    downloadBlob(new Blob([data],{type:'application/json'}),`CL_Lab5_${fileId()}.json`);
+  function reportName(){
+    const shortName=(state.name1||'students').trim().replace(/[^\p{L}\p{N}]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,42)||'students';
+    return `LING3306_Lab5_${shortName}.pdf`;
   }
-  function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-  async function restoreDraft(file){
-    if(!file)return;
-    try{const value=JSON.parse(await file.text());if(![2,3,4,5].includes(value.version)||!value.answer||!value.source||!value.screenshot||!value.features)throw Error('Invalid draft');
-      if(!confirm('Replace the current locally saved lab with this draft?'))return;
-      state=migrate(value);render();toast('Saved draft opened.');
-    }catch(_){toast('This is not a compatible Lab 5 draft.');}
-  }
-  const paragraph = s => `<div class="report-answer">${safe(s || '—')}</div>`;
-  const reportLink = url => isHttp(url)?`<a href="${safe(url)}">${safe(url)}</a>`:safe(url||'—');
-  function createReport(){
-    const report=document.createElement('article');report.className='cl5-report-shell';report.id='cl5-report';
-    const caption=(key,label='Student screenshot')=>state.screenshot[key]?`<figure class="report-item"><img src="${state.screenshot[key].data}" alt="${safe(label)}"><figcaption>${safe(label)} · ${safe(state.screenshot[key].name)}</figcaption></figure>`:'';
-    function entry(key,title,index){
-      let details='';
-      if(state.query[key+'_1']||state.query[key+'_2'])for(const i of [1,2]){
-        if(state.query[key+'_'+i])details+=`<div class="report-meta-line"><b>Analysis ${i}</b><span>${safe(state.query[key+'_'+i])}</span></div>`;
-      }
-      else if(state.query[key])details+=`<div class="report-meta-line"><b>Queries and settings</b><span>${safe(state.query[key])}</span></div>`;
-      if(state.source[key])details+=`<div class="report-meta-line"><b>Source</b><span>${reportLink(state.source[key])}</span></div>`;
-      return `<section class="report-entry"><h3>${index} &nbsp; ${safe(title)}</h3>${details}${paragraph(state.answer[key])}${caption(key+'_1',`${title} — analysis 1`)}${caption(key+'_2',`${title} — analysis 2`)}${caption(key,`${title} — search evidence`)}</section>`;
-    }
-    const featureRows=featureNames.map(([key,label])=>`<tr><th>${safe(label)}</th><td>${safe(state.features['a_'+key]||'Not tested')}</td><td>${safe(state.features['b_'+key]||'Not tested')}</td></tr>`).join('');
-    const supportRows=supportFeatures.map(x=>`<tr><th>${safe(x.label)}</th><td>${safe(state.support['a_'+x.key]||'Not tested')}</td><td>${safe(state.support['b_'+x.key]||'Not tested')}</td></tr>`).join('');
-    const evaluation=criteria.map((c,i)=>`<section class="report-eval"><div class="report-eval-title"><span>${String(i+1).padStart(2,'0')}</span><h3>${safe(c.label)}</h3></div><div class="report-rating"><div><b>${safe(corpusName('a'))}</b><span>${safe(state.criteria['a_'+c.key]||'Not assessed')}</span></div><div><b>${safe(corpusName('b'))}</b><span>${safe(state.criteria['b_'+c.key]||'Not assessed')}</span></div></div>${paragraph(state.criteriaNotes[c.key])}</section>`).join('');
-    const choice=state.decision==='a'?corpusName('a'):state.decision==='b'?corpusName('b'):state.decision==='both'?'Depends on the research task':'Not selected';
-    report.innerHTML=`
-      <header class="report-top"><span>LING3306 &nbsp;/&nbsp; CORPUS LINGUISTICS</span><span>LAB 05</span></header>
-      <div class="report-lede"><div class="report-kicker">RESEARCH LAB REPORT</div><h1>Corpus Platform Review</h1><p>Comparison of two corpus platforms</p></div>
-      <div class="report-info"><div><b>Students</b><span>${safe(state.name1)}<br>${safe(state.name2)}</span></div><div><b>Date</b><span>${safe(new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}))}</span></div></div>
-      <div class="report-corpora"><div><span>PLATFORM 01</span><h2>${safe(corpusName('a'))}</h2><p>${reportLink(state.aUrl)}</p></div><div><span>PLATFORM 02</span><h2>${safe(corpusName('b'))}</h2><p>${reportLink(state.bUrl)}</p></div></div>
-      <div class="report-citation"><b>Reference</b><span>Akishev, T. (2026). Evaluating corpus interface usability for linguistic research: The case of the Kazakh National Corpus. <i>SKASE Journal of Theoretical Linguistics, 23</i>(1), 209–228. <a href="https://doi.org/10.33542/JTL2026-1-11">doi:10.33542/JTL2026-1-11</a></span></div>
-      <section class="report-section"><div class="report-section-head"><span>01</span><h2>${safe(corpusName('a'))}</h2></div>
-        ${entry('a_profile','Corpus overview','1.1')}${entry('a_trial','Searches and results','1.2')}</section>
-      <section class="report-section"><div class="report-section-head"><span>02</span><h2>${safe(corpusName('b'))}</h2></div>
-        ${entry('b_profile','Corpus overview','2.1')}${entry('b_trial','Searches and results','2.2')}</section>
-      <section class="report-section"><div class="report-section-head"><span>03</span><h2>Features and documentation</h2></div>
-        <h3 class="report-subheading">Search and analysis tools</h3><table><thead><tr><th>Feature</th><th>${safe(corpusName('a'))}</th><th>${safe(corpusName('b'))}</th></tr></thead><tbody>${featureRows}</tbody></table>
-        <h3 class="report-subheading">Research support</h3><table><thead><tr><th>Criterion</th><th>${safe(corpusName('a'))}</th><th>${safe(corpusName('b'))}</th></tr></thead><tbody>${supportRows}</tbody></table>
-        ${paragraph(state.answer.inventory)}<div class="report-meta-line"><b>Source</b><span>${reportLink(state.source.inventory)}</span></div>${caption('inventory','Feature / documentation evidence')}</section>
-      <section class="report-section"><div class="report-section-head"><span>04</span><h2>Four-criteria evaluation</h2></div><p class="report-method">Using Table 1 of Akishev (2026). Qualitative judgments based on the students’ tests.</p>
-        ${evaluation}</section>
-      <section class="report-section"><div class="report-section-head"><span>05</span><h2>Final assessment</h2></div><div class="report-choice"><b>Preferred platform</b><span>${safe(choice)}</span></div>${paragraph(state.answer.comparison)}<div class="report-meta-line"><b>Source</b><span>${reportLink(state.source.comparison)}</span></div>${caption('comparison','Comparison evidence')}</section>
-      <section class="report-end"><h2>Submission record</h2><p>Signed in the worksheet: ${state.consent?'Yes':'No'} · Paste attempts recorded in this browser: ${state.pastes} · Recorded deduction: ${pasteDeduction()} points (subject to instructor review).</p>${state.pasteLog.length?`<p>Recorded times: ${safe(state.pasteLog.join(' · '))}</p>`:''}</section>
-      <footer class="report-footer">LAB 5 &nbsp; · &nbsp; CORPUS PLATFORM REVIEW &nbsp; / &nbsp; TIMUR AKISHEV</footer>`;
-    document.body.appendChild(report);return report;
-  }
-  function fileId(){return (state.name1||'draft').trim().replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,32)||'draft';}
-  function reportName(){return `LING3306_Lab5_${fileId()}.pdf`;}
   async function pdfBlob(){
-    if(typeof window.html2pdf!=='function')throw new Error('Direct PDF download requires the PDF library; use Print / Save as PDF instead.');
-    const el=createReport();el.classList.add('report-visible');
-    try{
-      await Promise.all(Array.from(el.images).map(img=>img.complete?Promise.resolve():img.decode().catch(()=>{})));
-      const opts={margin:[12,13,13,13],filename:reportName(),image:{type:'jpeg',quality:.92},html2canvas:{scale:1.8,backgroundColor:'#ffffff',useCORS:false,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['.report-corpora','.report-entry h3','.report-eval','.report-item','tr']}};
-      const worker=window.html2pdf().set(opts).from(el).toPdf();
-      const pdf=await worker.get('pdf');
-      const total=pdf.internal.getNumberOfPages();
-      for(let i=1;i<=total;i++){
-        pdf.setPage(i);
-        pdf.setDrawColor(208,216,223);pdf.setLineWidth(.2);pdf.line(13,282,197,282);
-        pdf.setFont('helvetica','normal');pdf.setFontSize(8);pdf.setTextColor(115,129,141);
-        pdf.text('LING3306  /  LAB 5',13,288);
-        pdf.text(`${i} / ${total}`,197,288,{align:'right'});
-      }
-      return pdf.output('blob');
-    } finally {el.remove();}
+    if(!window.CL5Pdf || typeof window.CL5Pdf.build!=='function')throw new Error('PDF generator did not load. Reload the page and try again.');
+    return window.CL5Pdf.build(state,{corpusA:corpusName('a'),corpusB:corpusName('b'),features:featureNames,support:supportFeatures,criteria,filename:reportName()});
   }
-  async function downloadPdf(){if(busy)return;busy=true;toast('Preparing your PDF report…');try{downloadBlob(await pdfBlob(),reportName());toast('PDF downloaded.');}catch(e){toast(e.message || 'PDF could not be generated. Try Print / Save as PDF.');}finally{busy=false;}}
-  function printPdf(){const el=createReport();el.classList.add('report-visible');const cleanup=()=>{el.remove();window.removeEventListener('afterprint',cleanup);};window.addEventListener('afterprint',cleanup);setTimeout(()=>{window.print();setTimeout(cleanup,2000);},80);}
   async function submit(){
-    if(!CONFIG.submissionEndpoint){toast('Submission is not configured. Download the PDF instead.');return;}
+    if(!CONFIG.submissionEndpoint){toast('Online submission has not been enabled by your instructor.');return;}
     const issues=validation();if(issues.length){toast('Complete the missing required fields before submitting.');return;}
     if(!state.consent){toast('Confirm the declaration before submitting.');return;}
     if(!accessCode){toast('Enter the submission code.');return;}
@@ -389,14 +321,15 @@
     busy=true;const button=$('#cl5-submit');button.disabled=true;button.textContent='Submitting…';
     try{
       const blob=await pdfBlob();
+      if(blob.size>2800000)throw new Error('Report is too large. Reduce screenshot sizes before submitting.');
       const data=new FormData();data.append('pdf',blob,reportName());
       data.append('student1',state.name1);data.append('student2',state.name2);data.append('corpusA',state.aName);data.append('corpusB',state.bName);
       data.append('code',accessCode);data.append('pasteAttempts',String(state.pastes));data.append('pasteDeduction',String(pasteDeduction()));
       const response=await fetch(CONFIG.submissionEndpoint,{method:'POST',body:data});
       const result=await response.json().catch(()=>({error:'Unexpected server response'}));
       if(!response.ok||!result.ok)throw Error(result.error||'Submission failed');
-      state.submitted=true;autosave();render();toast('Submission accepted by the server. Keep a copy of your PDF.');
-    }catch(e){button.disabled=false;button.textContent='Send to instructor';toast(`Submission not confirmed: ${e.message}. Download a PDF backup.`);}finally{busy=false;accessCode='';}
+      state.submitted=true;autosave();render();toast('Your report was sent successfully.');
+    }catch(e){button.disabled=false;button.textContent='Send to instructor';toast(`Submission not confirmed: ${e.message}. Please contact your instructor if the problem continues.`);}finally{busy=false;accessCode='';}
   }
   render();
 })();
