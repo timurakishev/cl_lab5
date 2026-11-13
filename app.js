@@ -67,7 +67,6 @@
     const saved = JSON.parse(localStorage.getItem('ling3306-cl-lab5-v5') || localStorage.getItem('ling3306-cl-lab5-v3') || localStorage.getItem('ling3306-cl-lab5-v2') || 'null');
     state = migrate(saved) || initial();
   } catch (_) { /* Ignore damaged drafts. */ }
-  let accessCode = '';
   let busy = false;
   let lastPasteAt = 0;
   let toastTimer;
@@ -216,15 +215,16 @@
     return issues;
   }
   function review() {
-    const issues=validation();
+    const issues = validation();
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
     const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).length} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
-    return header('Review and submit',8,'Check your answers before sending the report to your instructor.')+
+    const disabled = issues.length || !state.consent ? 'disabled' : '';
+    return header('Review and submit',8,'Check your work, download the PDF, and email it to your instructor.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
       `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
       `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots. Sources are cited.</span></label>`+
-      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-submit" ${issues.length||!state.consent||state.submitted||!CONFIG.submissionEndpoint?'disabled':''} title="${CONFIG.submissionEndpoint?'Send your completed PDF report':'Submission has not been enabled by the instructor'}">${state.submitted?'Submitted':'Send to instructor'}</button></div>`+
-      (CONFIG.submissionEndpoint?`<div class="cl5-field"><label for="cl5-code">Submission code</label><input id="cl5-code" type="password" autocomplete="off" placeholder="Code from your instructor"></div>`:'');
+      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>1. Download PDF</button><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-email" ${disabled}>2. Compose email</button></div>`+
+      `<p class="cl5-help">After downloading, attach the PDF to your email and send it. The email button fills in the subject and message, but cannot attach the file for you.</p>`;
   }
   function render() {
     const step=state.step;
@@ -258,7 +258,6 @@
     else if(el.dataset.criterionNote){state.criteriaNotes[el.dataset.criterionNote]=el.value;const counter=work.querySelector(`[data-note-count="${el.dataset.criterionNote}"]`);if(counter)counter.textContent=`${wordCount(el.value)} / 25 words`;}
     else if(el.hasAttribute('data-decision'))state.decision=el.value;
     else if(el.id==='cl5-consent')state.consent=el.checked;
-    else if(el.id==='cl5-code') accessCode=el.value;
     autosave();
   }
   work.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))updateValue(e.target);});
@@ -269,7 +268,8 @@
   work.addEventListener('click',async e=>{
     const target=e.target.closest('button');if(!target)return;
     if(target.dataset.removeImage){delete state.screenshot[target.dataset.removeImage];render();}
-    else if(target.id==='cl5-submit')await submit();
+    else if(target.id==='cl5-download')await downloadPdf();
+    else if(target.id==='cl5-email')composeEmail();
   });
   // The restriction is intentionally limited to written answers; names, search
   // strings and links can be pasted normally. It is easy to bypass
@@ -311,25 +311,40 @@
     if(!window.CL5Pdf || typeof window.CL5Pdf.build!=='function')throw new Error('PDF generator did not load. Reload the page and try again.');
     return window.CL5Pdf.build(state,{corpusA:corpusName('a'),corpusB:corpusName('b'),features:featureNames,support:supportFeatures,criteria,filename:reportName()});
   }
-  async function submit(){
-    if(!CONFIG.submissionEndpoint){toast('Online submission has not been enabled by your instructor.');return;}
-    const issues=validation();if(issues.length){toast('Complete the missing required fields before submitting.');return;}
-    if(!state.consent){toast('Confirm the declaration before submitting.');return;}
-    if(!accessCode){toast('Enter the submission code.');return;}
-    if(busy)return;
-    if(!confirm(`Send the PDF for ${state.name1} and ${state.name2}? This cannot be undone.`))return;
-    busy=true;const button=$('#cl5-submit');button.disabled=true;button.textContent='Submitting…';
+  function readyToFinish() {
+    const issues=validation();
+    if(issues.length){toast('Complete the missing required fields first.');return false;}
+    if(!state.consent){toast('Confirm the declaration first.');return false;}
+    return true;
+  }
+  async function downloadPdf(){
+    if(!readyToFinish() || busy)return;
+    busy=true;
+    const button=$('#cl5-download');
+    if(button){button.disabled=true;button.textContent='Preparing PDF…';}
     try{
       const blob=await pdfBlob();
-      if(blob.size>2800000)throw new Error('Report is too large. Reduce screenshot sizes before submitting.');
-      const data=new FormData();data.append('pdf',blob,reportName());
-      data.append('student1',state.name1);data.append('student2',state.name2);data.append('corpusA',state.aName);data.append('corpusB',state.bName);
-      data.append('code',accessCode);data.append('pasteAttempts',String(state.pastes));data.append('pasteDeduction',String(pasteDeduction()));
-      const response=await fetch(CONFIG.submissionEndpoint,{method:'POST',body:data});
-      const result=await response.json().catch(()=>({error:'Unexpected server response'}));
-      if(!response.ok||!result.ok)throw Error(result.error||'Submission failed');
-      state.submitted=true;autosave();render();toast('Your report was sent successfully.');
-    }catch(e){button.disabled=false;button.textContent='Send to instructor';toast(`Submission not confirmed: ${e.message}. Please contact your instructor if the problem continues.`);}finally{busy=false;accessCode='';}
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url;link.download=reportName();
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      toast('PDF downloaded. Attach it to your email before sending.');
+    }catch(e){
+      toast(`Could not create PDF: ${e.message}`);
+    }finally{
+      busy=false;
+      if(button){button.disabled=false;button.textContent='1. Download PDF';}
+    }
+  }
+  function composeEmail(){
+    if(!readyToFinish())return;
+    const recipient=String(CONFIG.instructorEmail||'').trim();
+    const subject=`LING3306 Lab 5 — ${state.name1.trim()} & ${state.name2.trim()}`;
+    const body=`Hello,\n\nAttached is our Lab 5 report comparing ${corpusName('a')} and ${corpusName('b')}.\n\n${state.name1.trim()}\n${state.name2.trim()}`;
+    const url=`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href=url;
+    toast('Attach the downloaded PDF to your email before sending.');
   }
   render();
 })();

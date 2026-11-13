@@ -1,17 +1,15 @@
 # Lab 5 — Corpus Platform Review
 
-An eight-step research lab for LING3306 Corpus Linguistics. Students examine two assigned corpus platforms together, run searches, attach screenshots and evaluate the platforms using Akishev (2026).
+An eight-step lab for LING3306 Corpus Linguistics. Students compare two assigned corpus platforms and evaluate their analytical features using Akishev (2026).
 
-## Website
+## Setup
 
-The site runs from the repository root on GitHub Pages. No build step is needed.
+Upload the six website files to the root of your GitHub Pages repository. In `config.js`, set `instructorEmail` to the address where students should send their work.
 
-## Submissions
+## Submission
 
-Students submit a PDF directly from the final step. Email delivery requires the separate Cloudflare Worker in [`submission-worker/`](submission-worker/README.md). After deploying it, add its URL to `config.js`. Until then, the submit button is disabled.
+Students download their completed PDF, then open a prepared email and attach the file themselves. No email server is needed. The site saves work in the current browser.
 
-The report is generated locally without an external PDF library. Drafts save in the browser. Copy/paste restrictions are browser-level deterrents, not proof of misconduct.
+## Reading
 
-## Reference
-
-Akishev, T. (2026). Evaluating corpus interface usability for linguistic research: The case of the Kazakh National Corpus. *SKASE Journal of Theoretical Linguistics, 23*(1), 209–228. [PDF](https://www.skase.sk/Volumes/JTL61/11.pdf).
+[Akishev (2026), SKASE Journal of Theoretical Linguistics](https://www.skase.sk/Volumes/JTL61/11.pdf)
