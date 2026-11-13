@@ -390,3 +390,22 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
   border-color: rgba(190, 203, 216, .52);
   background: rgba(255, 255, 255, .045); color: #e0edf6;
 }
+
+/* Lab 5: requested layout adjustments. */
+.cl5-page-title .cl5-kicker {font-size:16px;}
+.cl5-paper {scroll-margin-top:20px;}
+.cl5-page-numbers {display:flex;align-items:center;justify-content:center;gap:7px;margin:13px 0 0;}
+.cl5-page-number {appearance:none;background:transparent;color:#aebdcc;border:1px solid transparent;border-radius:5px;min-width:34px;height:39px;padding:2px 6px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:600;line-height:1;transition:color .12s ease,background-color .12s ease;}
+.cl5-page-number:hover {color:#e7f0f6;background:rgba(255,255,255,.05);}
+.cl5-page-number.is-current {font-size:22px;font-weight:750;color:#d2e6f5;cursor:default;}
+.cl5-page-number:focus-visible {outline:2px solid #a6cce9;outline-offset:2px;}
+.cl5-matrix-group {border:1px solid rgba(182,197,211,.23);border-radius:10px;padding:6px 18px 10px;margin:0 0 19px;}
+.cl5-matrix-group h3, .cl5-matrix-group h3.cl5-matrix-divider {border:0;padding:0;margin:12px 0 7px;}
+.cl5-matrix-group .cl5-feature-head {border-bottom:1px solid rgba(182,197,211,.22);}
+.cl5-matrix-group .cl5-feature {border-bottom:1px solid rgba(182,197,211,.12);}
+.cl5-matrix-group .cl5-feature:last-child {border-bottom:0;}
+@media(max-width:760px){
+  .cl5-matrix-group{padding:6px 10px 8px;}
+  .cl5-page-numbers{gap:3px;}
+  .cl5-page-number{min-width:30px;padding:2px 4px;}
+}

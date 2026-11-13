@@ -14,8 +14,8 @@
     { key:'b_profile', title:'Sources and content', short:'Overview', min:80 },
     { key:'b_trial', title:'Analytical features', short:'Analysis', min:120 },
     { key:'inventory', title:'Features and documentation', min:120 },
-    { key:'comparison', title:'Evaluate the interfaces', short:'Evaluation', min:140 },
-    { key:'review', title:'Review and submit', short:'Report' },
+    { key:'comparison', title:'Interface evaluation', short:'Evaluation', min:140 },
+    { key:'review', title:'Review and submission', short:'Report' },
   ];
   const criteria = [
     { key:'presence', label:'Presence or absence', description:'Do the platforms offer the tools you needed?', options:['Not assessed','Most tools present','Some tools present','Few tools present','Not available'] },
@@ -120,7 +120,7 @@
   }
   function evidence(key, requiredImage=false, details='Link to the page or search result you used.') {
     return `<section class="cl5-evidence"><h3>Sources and screenshots</h3>
-      <div class="cl5-field"><label for="cl5-source">${key==='inventory'?'Documentation / feature URL *':'Official corpus information URL *'}</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
+      <div class="cl5-field"><label for="cl5-source">${key==='inventory'?'Feature documentation URL *':'Official corpus information URL *'}</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
       <div class="cl5-field"><label for="cl5-image-${safe(key)}">${requiredImage?'Upload screenshots *':'Screenshots (optional)'}</label>
        ${screenshotsMarkup(key,requiredImage)}</div></section>`;
   }
@@ -166,11 +166,11 @@
     const support=supportFeatures.map(x=>matrixRow(x.label,x.hint,'support',x.key,x.options)).join('');
     const columns=`<div class="cl5-feature-head"><span>What to check</span><span>${safe(corpusName('a'))}</span><span>${safe(corpusName('b'))}</span></div>`;
     return header('Features and documentation',6,
-      `Explore all listed analytical features in both platforms. Check the documentation, data sources, AI/NLP tools and reproducibility. Select what you found and explain the main differences.`)+
-      `<div class="cl5-matrix"><h3>Search and analytical features</h3>${columns}${tools}<p class="cl5-help">Explore all six features in both platforms. Record what is available and what is missing or restricted.</p>`+
-      `<h3 class="cl5-matrix-divider">Research support</h3>${columns}${support}</div>`+
+      `Report on the four analytical features studied earlier for both platforms, then try two additional tools: n-gram analysis and subcorpus/metadata filters. Record which features are available, limited or missing. Check documentation, data sources, AI/NLP tools and reproducibility, and explain the main differences.`)+
+      `<div class="cl5-matrix"><section class="cl5-matrix-group" aria-label="Search and analytical features"><h3>Search and analytical features</h3>${columns}${tools}</section>`+
+      `<section class="cl5-matrix-group" aria-label="Research support"><h3>Research support</h3>${columns}${support}</section></div>`+
       `<div class="cl5-writing-prompt"><strong>What did you find?</strong><span>Comment on the documentation, corpus sources, AI/NLP features (if any), and whether you could reproduce your searches. Include specific examples.</span></div>`+
-      textarea('inventory',120)+evidence('inventory',false,'Link to the documentation or a relevant feature page.');
+      textarea('inventory',120)+evidence('inventory',false,'Link to a guide for an analytical tool or feature assessed here, rather than the general corpus overview from Task 2 or 4.');
   }
   function criterionBlock(c,index) {
     const left=state.criteria['a_'+c.key]||c.options[0], right=state.criteria['b_'+c.key]||c.options[0], notes=state.criteriaNotes[c.key]||'';
@@ -185,7 +185,7 @@
   }
   function comparison() {
     const decisionOptions=[['','Choose one'],['a',corpusName('a')],['b',corpusName('b')],['both','Depends on the research task']];
-    return header('Evaluate the interfaces',7,
+    return header('Interface evaluation',7,
       'Use the four criteria from <strong>Akishev (2026, Table 1)</strong>. Make a selection for each corpus, then explain it using evidence from your searches. These are descriptions, not numerical ratings.')+
       `<div class="cl5-criteria">${criteria.map(criterionBlock).join('')}</div>`+
       `<section class="cl5-criterion cl5-verdict"><div class="cl5-criterion-top"><span class="cl5-criterion-index">05</span><div><h3>Which platform would you use?</h3><p>Make a final choice based on the four criteria above.</p></div></div>`+
@@ -227,10 +227,10 @@
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
     const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).reduce((n,key)=>n+screenshotsFor(key).length,0)} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
     const disabled = issues.length || !state.consent ? 'disabled' : '';
-    return header('Review and submit',8,'Check your work and download the completed report.')+
+    return header('Review and submission',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
       `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
-      `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots. Sources are cited.</span></label>`+
+      `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots.</span></label>`+
       `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF report</button></div>`+
       `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading.</p>`;
   }
@@ -242,16 +242,30 @@
     $('#cl5-progress-bar').style.width=`${100*(step+1)/defs.length}%`;
     $('#cl5-back').disabled=step===0;
     $('#cl5-next').textContent=step===defs.length-1?'Back to start ↺':'Next →';
+    $('#cl5-page-numbers').innerHTML=defs.map((_,i)=>
+      `<button type="button" class="cl5-page-number${i===step?' is-current':''}" data-task-page="${i}" aria-label="Go to task ${i+1}" ${i===step?'aria-current="step"':''}>${i+1}</button>`
+    ).join('');
     autosave();
   }
-  function go(next) { state.step=Math.min(defs.length-1,Math.max(0,next)); render(); root.scrollIntoView({behavior:'instant',block:'start'}); }
-  $('#cl5-back').addEventListener('click',()=>go(state.step-1));
-  $('#cl5-next').addEventListener('click',()=>{
-    if(state.step===0){$('#cl5-start-confirm').showModal();return;}
-    go(state.step===defs.length-1?0:state.step+1);
+  let requestedFirstTask=1;
+  function go(next) {
+    state.step=Math.min(defs.length-1,Math.max(0,next));
+    render();
+    // Keep the required-reading box at the top when changing tasks.
+    document.querySelector('.cl5-paper').scrollIntoView({behavior:'instant',block:'start'});
+  }
+  function requestTask(next) {
+    if(state.step===0 && next>0){requestedFirstTask=next;$('#cl5-start-confirm').showModal();return;}
+    go(next);
+  }
+  $('#cl5-back').addEventListener('click',()=>requestTask(state.step-1));
+  $('#cl5-next').addEventListener('click',()=>requestTask(state.step===defs.length-1?0:state.step+1));
+  $('#cl5-page-numbers').addEventListener('click',event=>{
+    const button=event.target.closest('[data-task-page]');
+    if(button)requestTask(Number(button.dataset.taskPage));
   });
   $('#cl5-confirm-cancel').addEventListener('click',()=>$('#cl5-start-confirm').close());
-  $('#cl5-confirm-continue').addEventListener('click',()=>{$('#cl5-start-confirm').close();go(1);});
+  $('#cl5-confirm-continue').addEventListener('click',()=>{$('#cl5-start-confirm').close();go(requestedFirstTask);});
   $('#cl5-framework-open').addEventListener('click',()=>$('#cl5-dialog').showModal());
   $('#cl5-dialog-close').addEventListener('click',()=>$('#cl5-dialog').close());
   $('#cl5-dialog').addEventListener('click',e=>{if(e.target.id==='cl5-dialog')e.target.close();});
