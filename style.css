@@ -362,3 +362,31 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 
 /* Keep the writing rule visible but discourage copying its text. */
 .cl5-integrity { -webkit-user-select: none; user-select: none; }
+
+/* Keep lab instructions and other static page text from being selected.
+   Students can still select text in fields they fill in. */
+.cl5-page, .cl5-dialog {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.cl5-page input, .cl5-page textarea,
+.cl5-page [contenteditable="true"],
+.cl5-dialog input, .cl5-dialog textarea,
+.cl5-dialog [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Subtle, matching outlines for the two reading actions. */
+.cl5-paper-link { gap: 10px; }
+.cl5-paper-link a, .cl5-paper-link .cl5-link-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 38px; padding: 7px 12px;
+  border: 1px solid rgba(190, 203, 216, .28); border-radius: 7px;
+  background: rgba(255, 255, 255, .018); color: #b4d2e7;
+  text-decoration: none; font-size: 16px; font-weight: 500; line-height: 1.35;
+}
+.cl5-paper-link a:hover, .cl5-paper-link .cl5-link-button:hover {
+  border-color: rgba(190, 203, 216, .52);
+  background: rgba(255, 255, 255, .045); color: #e0edf6;
+}

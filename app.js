@@ -13,7 +13,7 @@
     { key:'a_trial', title:'Analytical features', short:'Analysis', min:120 },
     { key:'b_profile', title:'Sources and content', short:'Overview', min:80 },
     { key:'b_trial', title:'Analytical features', short:'Analysis', min:120 },
-    { key:'inventory', title:'Features and documentation', short:'Tools', min:120 },
+    { key:'inventory', title:'Features and documentation', min:120 },
     { key:'comparison', title:'Evaluate the interfaces', short:'Evaluation', min:140 },
     { key:'review', title:'Review and submit', short:'Report' },
   ];
@@ -30,8 +30,7 @@
     {key:'repeat',label:'Reproducibility',hint:'Can others repeat a search?',options:['Not tested','Easy','With limits','Difficult']},
   ];
   const corpusName = side => (state[side==='a'?'aName':'bName']||`Corpus ${side.toUpperCase()}`).trim();
-  const taskTitle = i => i===1?`${corpusName('a')} — sources and content`:i===2?`${corpusName('a')} — analytical features`:i===3?`${corpusName('b')} — sources and content`:i===4?`${corpusName('b')} — analytical features`:defs[i].title;
-  const taskShort = i => (i>=1&&i<=4)?`${i<3?corpusName('a'):corpusName('b')} · ${i%2?'Overview':'Analysis'}`:defs[i].short;
+  const taskTitle = i => i===1?`${corpusName('a')}: sources and content`:i===2?`${corpusName('a')}: analytical features`:i===3?`${corpusName('b')}: sources and content`:i===4?`${corpusName('b')}: analytical features`:defs[i].title;
   const featureNames = [
     ['frequency','Frequency lists'], ['concordance','Concordances / KWIC'],
     ['keywords','Keyword lists / keyness'], ['collocations','Collocation analysis'],
@@ -144,14 +143,14 @@
   function profile(which) {
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
-    return header(`${name} — sources and content`,which==='A'?2:4,prompt)+
+    return header(`${name}: sources and content`,which==='A'?2:4,prompt)+
       (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools into answer fields. You may paste into names, corpus names, search queries and URL fields. Each blocked paste attempt in an answer field carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
       textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
     const side=which.toLowerCase(),key=side+'_trial',name=corpusName(side);
     const prompt=`Explore all four analytical features discussed in Akishev (2026): frequency lists, concordances, keyword lists, and collocations. Test <strong>two</strong> of these features in <strong>${safe(name)}</strong>. Record the queries and settings, discuss what you found, and upload screenshots of both analyses. If a feature is unavailable, note that in Task 6.`;
-    return header(`${name} — analytical features`,which==='A'?3:5,prompt)+
+    return header(`${name}: analytical features`,which==='A'?3:5,prompt)+
       `<div class="cl5-analysis-pair"><div class="cl5-analysis-item">${queryField(key,1)}${screenshotField(key,1)}</div><div class="cl5-analysis-item">${queryField(key,2)}${screenshotField(key,2)}</div></div>`+
       textarea(key,120,'What did the two analyses show?','Explain the results of each analysis, what the tools showed, and any problems you encountered.');
   }
@@ -238,7 +237,7 @@
   function render() {
     const step=state.step;
     work.innerHTML=step===0?setup():step===1?profile('A'):step===2?trial('A'):step===3?profile('B'):step===4?trial('B'):step===5?featureInventory():step===6?comparison():review();
-    $('#cl5-progress-label').textContent=`Task ${step+1} of ${defs.length} · ${taskShort(step)}`;
+    $('#cl5-progress-label').textContent=`Task ${step+1} of ${defs.length} · ${taskTitle(step)}`;
     progress.setAttribute('aria-valuenow',String(step+1));
     $('#cl5-progress-bar').style.width=`${100*(step+1)/defs.length}%`;
     $('#cl5-back').disabled=step===0;
@@ -311,6 +310,14 @@
       toast('Please refer to the instructions on this page rather than copying them.');
     }
   });
+  // Do not let visitors copy the static lab text with an ordinary browser copy command.
+  // Keep students' own form entries selectable and copyable.
+  document.addEventListener('copy', event => {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('.cl5-page')) return;
+    if (target.closest('input, textarea, [contenteditable="true"]')) return;
+    event.preventDefault();
+  }, true);
   async function storeImages(key,files) {
     if(!files.length)return;
     const existing=screenshotsFor(key);
