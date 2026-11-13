@@ -2,14 +2,6 @@
 
 A browser-based lab for LING3306 Corpus Linguistics. Students examine two assigned corpus platforms, run searches, attach screenshots, and write a comparison using the criteria in Akishev (2026).
 
-## Add to the website
-
-Copy `teaching/cl_lab5/` into the existing `timurakishev.github.io` repository. The lab will be available at:
-
-https://timurakishev.github.io/teaching/cl_lab5/
-
-No build step is needed.
-
 ## Notes
 
 Drafts save in the student's browser. Reports can be downloaded as PDFs or printed. Email submission is not enabled. Paste warnings are browser-based and should be checked before grading.
