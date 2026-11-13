@@ -1,6 +1,6 @@
-/* Public website settings. Enter the address that should receive Lab 5 reports. */
+/* Public website settings. */
 window.CL5_CONFIG = {
-  instructorEmail: "",
+  instructorEmail: "t.akishev@kimep.kz",
   course: "LING3306 Corpus Linguistics",
   lab: "Lab 5 — Corpus Platform Review"
 };

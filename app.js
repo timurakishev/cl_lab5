@@ -219,12 +219,12 @@
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
     const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).length} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
     const disabled = issues.length || !state.consent ? 'disabled' : '';
-    return header('Review and submit',8,'Check your work, download the PDF, and email it to your instructor.')+
+    return header('Review and submit',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
       `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
       `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots. Sources are cited.</span></label>`+
-      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>1. Download PDF</button><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-email" ${disabled}>2. Compose email</button></div>`+
-      `<p class="cl5-help">After downloading, attach the PDF to your email and send it. The email button fills in the subject and message, but cannot attach the file for you.</p>`;
+      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF</button></div>`+
+      `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading. Include both students’ names in the email subject.</p>`;
   }
   function render() {
     const step=state.step;
@@ -269,7 +269,6 @@
     const target=e.target.closest('button');if(!target)return;
     if(target.dataset.removeImage){delete state.screenshot[target.dataset.removeImage];render();}
     else if(target.id==='cl5-download')await downloadPdf();
-    else if(target.id==='cl5-email')composeEmail();
   });
   // The restriction is intentionally limited to written answers; names, search
   // strings and links can be pasted normally. It is easy to bypass
@@ -329,22 +328,13 @@
       link.href=url;link.download=reportName();
       document.body.appendChild(link);link.click();link.remove();
       setTimeout(()=>URL.revokeObjectURL(url),60000);
-      toast('PDF downloaded. Attach it to your email before sending.');
+      toast(`PDF downloaded. Email it to ${CONFIG.instructorEmail||'t.akishev@kimep.kz'} for grading.`);
     }catch(e){
       toast(`Could not create PDF: ${e.message}`);
     }finally{
       busy=false;
-      if(button){button.disabled=false;button.textContent='1. Download PDF';}
+      if(button){button.disabled=false;button.textContent='Download PDF';}
     }
-  }
-  function composeEmail(){
-    if(!readyToFinish())return;
-    const recipient=String(CONFIG.instructorEmail||'').trim();
-    const subject=`LING3306 Lab 5 — ${state.name1.trim()} & ${state.name2.trim()}`;
-    const body=`Hello,\n\nAttached is our Lab 5 report comparing ${corpusName('a')} and ${corpusName('b')}.\n\n${state.name1.trim()}\n${state.name2.trim()}`;
-    const url=`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href=url;
-    toast('Attach the downloaded PDF to your email before sending.');
   }
   render();
 })();
