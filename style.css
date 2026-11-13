@@ -359,3 +359,6 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
   .cl5-confirm-actions {justify-content:space-between;}
   .cl5-confirm-actions .cl5-btn{min-width:0;}
 }
+
+/* Keep the writing rule visible but discourage copying its text. */
+.cl5-integrity { -webkit-user-select: none; user-select: none; }

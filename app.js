@@ -67,6 +67,7 @@
     const saved = JSON.parse(localStorage.getItem('ling3306-cl-lab5-v5') || localStorage.getItem('ling3306-cl-lab5-v3') || localStorage.getItem('ling3306-cl-lab5-v2') || 'null');
     state = migrate(saved) || initial();
   } catch (_) { /* Ignore damaged drafts. */ }
+  const MAX_IMAGES_PER_FIELD = 2;
   let busy = false;
   let lastPasteAt = 0;
   let toastTimer;
@@ -78,6 +79,11 @@
   const wordCount = s => String(s||'').trim().split(/\s+/u).filter(Boolean).length;
   const isHttp = v => {try {let x = new URL(v); return x.protocol==='http:' || x.protocol==='https:';}catch(_){return false;}};
   const count = key => wordCount(state.answer[key]);
+  // Older drafts saved a single screenshot object; newer drafts save arrays.
+  const screenshotsFor = key => {
+    const entry = state.screenshot[key];
+    return (Array.isArray(entry) ? entry : entry ? [entry] : []).filter(item => item?.data);
+  };
   const pasteDeduction = () => Math.min(100, Math.max(0, Number(state.pastes)||0)*50);
   const remainingPoints = () => 100 - pasteDeduction();
   function autosave() {
@@ -107,22 +113,25 @@
       <div class="cl5-count" data-short="${count(key)<min}"><span id="cl5-wc">${count(key)} words</span><span>Minimum: ${min} words</span></div>
       </div>`;
   }
+  function screenshotsMarkup(key, requiredImage=false) {
+    const data = screenshotsFor(key);
+    return `<div class="cl5-upload"><input id="cl5-image-${safe(key)}" data-image="${safe(key)}" type="file" accept="image/png,image/jpeg,image/webp" multiple></div>
+      <small>${requiredImage?'At least one screenshot is required. ':''}Attach up to ${MAX_IMAGES_PER_FIELD} screenshots here. PNG, JPG or WebP; images are included in the PDF report.</small>
+      ${data.map((item,index) => `<div class="cl5-evidence-file"><img class="cl5-thumbnail" src="${item.data}" alt="Attached screenshot ${index+1}"><span>${safe(item.name)}</span><button class="cl5-link-danger" type="button" data-remove-image="${safe(key)}" data-remove-image-index="${index}">Remove</button></div>`).join('')}`;
+  }
   function evidence(key, requiredImage=false, details='Link to the page or search result you used.') {
-    const data = state.screenshot[key];
     return `<section class="cl5-evidence"><h3>Sources and screenshots</h3>
-      <div class="cl5-field"><label for="cl5-source">${key==='inventory'?'Documentation / feature URL *':'Corpus description / methodology URL *'}</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
-      <div class="cl5-field"><label for="cl5-image">${requiredImage?'Upload screenshots *':'Screenshot (optional)'}</label>
-       <div class="cl5-upload"><input id="cl5-image" data-image="${key}" type="file" accept="image/png,image/jpeg,image/webp"></div>
-       ${data ? `<img class="cl5-thumbnail" src="${data.data}" alt="Uploaded evidence screenshot"><span class="cl5-help">Attached: ${safe(data.name)}</span> <button class="cl5-link-danger" type="button" data-remove-image="${key}">Remove screenshot</button>` : `<small>${requiredImage?'Required: show your actual search and results.':'Add evidence from the corpus interface when useful.'} Screenshots are compressed and included in the PDF report.</small>`}
-       </div></section>`;
+      <div class="cl5-field"><label for="cl5-source">${key==='inventory'?'Documentation / feature URL *':'Official corpus information URL *'}</label><input id="cl5-source" type="url" data-source="${key}" value="${safe(state.source[key] || '')}" placeholder="https://..." autocomplete="off"><small>${safe(details)}</small></div>
+      <div class="cl5-field"><label for="cl5-image-${safe(key)}">${requiredImage?'Upload screenshots *':'Screenshots (optional)'}</label>
+       ${screenshotsMarkup(key,requiredImage)}</div></section>`;
   }
   function queryField(key,index) {
     return `<div class="cl5-field"><label for="cl5-query-${index}">Analysis ${index} — query and settings *</label><input id="cl5-query-${index}" type="text" data-query="${key}_${index}" value="${safe(state.query[key+'_'+index]||'')}" placeholder="Search term, filters, settings…"><small>Record the exact query and settings.</small></div>`;
   }
   function screenshotField(key,index){
-    const id=`${key}_${index}`, data=state.screenshot[id];
-    return `<div class="cl5-field"><label for="cl5-image-${index}">Analysis ${index} — screenshot *</label><input id="cl5-image-${index}" type="file" data-image="${id}" accept="image/png,image/jpeg,image/webp">
-      ${data?`<div class="cl5-evidence-file"><img class="cl5-thumbnail" src="${data.data}" alt="Attached screenshot"><span>${safe(data.name)}</span><button class="cl5-link-danger" type="button" data-remove-image="${id}">Remove</button></div>`:''}</div>`;
+    const id=`${key}_${index}`;
+    return `<div class="cl5-field"><label for="cl5-image-${safe(id)}">Analysis ${index} — screenshots *</label>
+      ${screenshotsMarkup(id,true)}</div>`;
   }
   function setup() {
     return header('Students and corpora',1,
@@ -136,8 +145,8 @@
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name} — sources and content`,which==='A'?2:4,prompt)+
-      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools. Each blocked paste attempt carries a <strong>50-point deduction</strong> (maximum 100). Names, URLs and search queries may be pasted. Pasting URLs is allowed and does not count toward the deduction. Your progress will be stored on your device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
-      textarea(key,80)+evidence(key,false,'Paste the URL of the official corpus description or methodology page. It should explain the corpus content and how the data were collected.');
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers, names and search queries; do not paste text from websites or AI tools. Pasting is permitted only in URL fields. Each blocked attempt, including a URL pasted into an answer, carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
     const side=which.toLowerCase(),key=side+'_trial',name=corpusName(side);
@@ -197,7 +206,7 @@
     for (const k of ['a_trial','b_trial']) {
       for(const i of [1,2]){
         if(!String(state.query[k+'_'+i]||'').trim())issues.push(`${k.startsWith('a_')?corpusName('a'):corpusName('b')}: add query ${i}.`);
-        if(!state.screenshot[k+'_'+i])issues.push(`${k.startsWith('a_')?corpusName('a'):corpusName('b')}: add screenshot ${i}.`);
+        if(!screenshotsFor(k+'_'+i).length)issues.push(`${k.startsWith('a_')?corpusName('a'):corpusName('b')}: add screenshot ${i}.`);
       }
     }
     for (const pfx of ['a','b']) {
@@ -217,19 +226,19 @@
   function review() {
     const issues = validation();
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
-    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).length} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
+    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).reduce((n,key)=>n+screenshotsFor(key).length,0)} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
     const disabled = issues.length || !state.consent ? 'disabled' : '';
     return header('Review and submit',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
       `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
       `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots. Sources are cited.</span></label>`+
-      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF</button></div>`+
-      `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading. Include both students’ names in the email subject.</p>`;
+      `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF report</button></div>`+
+      `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading.</p>`;
   }
   function render() {
     const step=state.step;
     work.innerHTML=step===0?setup():step===1?profile('A'):step===2?trial('A'):step===3?profile('B'):step===4?trial('B'):step===5?featureInventory():step===6?comparison():review();
-    $('#cl5-progress-label').textContent=`Step ${step+1} of ${defs.length} · ${taskShort(step)}`;
+    $('#cl5-progress-label').textContent=`Task ${step+1} of ${defs.length} · ${taskShort(step)}`;
     progress.setAttribute('aria-valuenow',String(step+1));
     $('#cl5-progress-bar').style.width=`${100*(step+1)/defs.length}%`;
     $('#cl5-back').disabled=step===0;
@@ -262,19 +271,26 @@
   }
   work.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))updateValue(e.target);});
   work.addEventListener('change',async e=>{
-    if(e.target.dataset.image) await storeImage(e.target.dataset.image,e.target.files?.[0]);
+    if(e.target.dataset.image) await storeImages(e.target.dataset.image,Array.from(e.target.files||[]));
     else if(e.target.matches('input,textarea,select'))updateValue(e.target);
   });
   work.addEventListener('click',async e=>{
     const target=e.target.closest('button');if(!target)return;
-    if(target.dataset.removeImage){delete state.screenshot[target.dataset.removeImage];render();}
+    if(target.dataset.removeImage){
+      const key=target.dataset.removeImage;
+      const images=screenshotsFor(key);
+      images.splice(Number(target.dataset.removeImageIndex||0),1);
+      if(images.length)state.screenshot[key]=images;
+      else delete state.screenshot[key];
+      render();
+    }
     else if(target.id==='cl5-download')await downloadPdf();
   });
-  // The restriction is intentionally limited to written answers; names, search
-  // strings and links can be pasted normally. It is easy to bypass
-  // client-side restrictions, and an event never proves AI use.
+  // URL fields are the only text fields that allow pasting. Browser-side
+  // detection is a deterrent, not proof of AI use or academic misconduct.
   function pasteWarning(event) {
-    if(!event.target.matches('.cl5-writing'))return;
+    const field=event.target;
+    if(!(field instanceof Element) || !field.matches('textarea, input[type="text"]'))return;
     event.preventDefault();
     const now=Date.now(); if(now-lastPasteAt<700)return; lastPasteAt=now;
     state.pastes++; state.pasteLog.push(new Date().toISOString()); autosave();
@@ -283,24 +299,42 @@
     toast(`Paste blocked. −50 points. Remaining: ${remainingPoints()}/100. Attempt ${state.pastes} recorded.`);
   }
   work.addEventListener('paste',pasteWarning);
-  work.addEventListener('drop',e=>{if(e.target.matches('.cl5-writing'))pasteWarning(e);});
+  work.addEventListener('drop',pasteWarning);
   work.addEventListener('beforeinput',e=>{if(e.inputType==='insertFromPaste' || e.inputType==='insertFromDrop')pasteWarning(e);});
-  // Copy deterrence for on-screen task prompts, not a false DRM claim.
-  work.addEventListener('copy',e=>{if(e.target.closest('.cl5-question')){e.preventDefault();toast('Please refer to the task on this page rather than copying its text.');}});
-  async function storeImage(key,file) {
-    if(!file)return;
-    if(!['image/png','image/jpeg','image/webp'].includes(file.type)){toast('Choose a PNG, JPG, or WebP image.');return;}
-    if(file.size>8*1024*1024){toast('This image exceeds 8 MB. Crop or resize it and try again.');return;}
-    try {
+  // Keep the task prompts and writing rule from being selected/copied casually.
+  work.addEventListener('copy',e=>{
+    const sel=window.getSelection();
+    const rule=work.querySelector('.cl5-integrity');
+    const coversRule=!!(rule && sel && sel.rangeCount && sel.getRangeAt(0).intersectsNode(rule));
+    if(e.target.closest('.cl5-question, .cl5-integrity') || coversRule){
+      e.preventDefault();
+      toast('Please refer to the instructions on this page rather than copying them.');
+    }
+  });
+  async function storeImages(key,files) {
+    if(!files.length)return;
+    const existing=screenshotsFor(key);
+    const slots=MAX_IMAGES_PER_FIELD-existing.length;
+    if(slots<=0){toast(`You can attach up to ${MAX_IMAGES_PER_FIELD} screenshots here. Remove one to replace it.`);return;}
+    const added=[];
+    for(const file of files.slice(0,slots)){
+      if(!['image/png','image/jpeg','image/webp'].includes(file.type)){toast('Choose a PNG, JPG, or WebP image.');continue;}
+      if(file.size>8*1024*1024){toast('An image exceeds 8 MB. Crop or resize it and try again.');continue;}
       const objectUrl=URL.createObjectURL(file);
-      const img=new Image(); img.src=objectUrl; await img.decode();
-      const scale=Math.min(1,1350/Math.max(img.width,img.height));
-      const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
-      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-      const data=canvas.toDataURL('image/jpeg',.76);URL.revokeObjectURL(objectUrl);
-      state.screenshot[key]={name:file.name.slice(0,90),data};
-      render();toast('Screenshot attached and saved locally.');
-    } catch(_) {toast('Could not read that screenshot. Try a PNG or JPG.');}
+      try {
+        const img=new Image();img.src=objectUrl;await img.decode();
+        const scale=Math.min(1,1350/Math.max(img.width,img.height));
+        const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        added.push({name:file.name.slice(0,90),data:canvas.toDataURL('image/jpeg',.76)});
+      }catch(_){toast('Could not read a screenshot. Try a PNG or JPG.');}
+      finally{URL.revokeObjectURL(objectUrl);}
+    }
+    if(!added.length)return;
+    state.screenshot[key]=[...existing,...added];
+    render();
+    if(files.length>slots){toast(`Only ${MAX_IMAGES_PER_FIELD} screenshots can be attached to each field.`);}
+    else{toast(`${added.length} screenshot${added.length===1?'':'s'} attached and saved locally.`);}
   }
   function reportName(){
     const shortName=(state.name1||'students').trim().replace(/[^\p{L}\p{N}]+/gu,'_').replace(/^_+|_+$/g,'').slice(0,42)||'students';
@@ -333,7 +367,7 @@
       toast(`Could not create PDF: ${e.message}`);
     }finally{
       busy=false;
-      if(button){button.disabled=false;button.textContent='Download PDF';}
+      if(button){button.disabled=false;button.textContent='Download PDF report';}
     }
   }
   render();

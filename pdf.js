@@ -116,23 +116,27 @@
       this.y+=15;
     }
     async screenshot(key,caption){
-      const record=this.s.screenshot?.[key];if(!record?.data)return;
-      const img=new Image();img.src=record.data;
-      try{await img.decode();}catch(_){return;}
-      const maxWidth=RIGHT-LEFT,maxHeight=365;
-      const ratio=Math.min(maxWidth/img.width,maxHeight/img.height,1);
-      const h=Math.max(1,img.height*ratio),w=Math.max(1,img.width*ratio);
-      this.ensure(h+55);
-      this.text(caption,{size:11,bold:true,color:colors.muted,gap:6,line:16});
-      this.ctx.fillStyle='#fafbfc';this.ctx.fillRect(LEFT,this.y-4,w+8,h+8);
-      this.ctx.drawImage(img,LEFT+4,this.y,w,h);this.y+=h+24;
+      const saved=this.s.screenshot?.[key];
+      const records=(Array.isArray(saved)?saved:saved?[saved]:[]).filter(item=>item?.data);
+      for(let index=0;index<records.length;index++){
+        const img=new Image();img.src=records[index].data;
+        try{await img.decode();}catch(_){continue;}
+        const maxWidth=RIGHT-LEFT,maxHeight=365;
+        const ratio=Math.min(maxWidth/img.width,maxHeight/img.height,1);
+        const h=Math.max(1,img.height*ratio),w=Math.max(1,img.width*ratio);
+        this.ensure(h+55);
+        const label=records.length>1?`${caption} (${index+1} of ${records.length})`:caption;
+        this.text(label,{size:11,bold:true,color:colors.muted,gap:6,line:16});
+        this.ctx.fillStyle='#fafbfc';this.ctx.fillRect(LEFT,this.y-4,w+8,h+8);
+        this.ctx.drawImage(img,LEFT+4,this.y,w,h);this.y+=h+24;
+      }
     }
     async profile(side,n){
       const key=`${side}_profile`,name=side==='a'?this.m.corpusA:this.m.corpusB;
       this.heading(name,n);
       this.sub('Sources and content');
       this.text(this.s.answer?.[key]||'No answer',{line:21});
-      this.small('Corpus description / methodology',this.s.source?.[key]);
+      this.small('Official corpus information',this.s.source?.[key]);
       await this.screenshot(key,'Corpus overview evidence');
       this.sub('Analytical features');
       for(let i=1;i<=2;i++){
