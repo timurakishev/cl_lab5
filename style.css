@@ -429,3 +429,16 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 #cl5-work:has(#cl5-download) > .cl5-help {
   text-align: center;
 }
+
+/* Keep the page and task numbers aligned with their titles. */
+.cl5-page-title .cl5-kicker {font-size:21px;line-height:1.25;}
+.cl5-task-heading {display:flex;align-items:baseline;gap:12px;min-width:0;margin:0 0 13px;}
+.cl5-task-heading .cl5-section-number {flex:none;margin:0;font-size:19px;line-height:1.3;letter-spacing:0;}
+.cl5-task-heading h2 {flex:1;min-width:0;margin:0;overflow-wrap:anywhere;}
+/* On task navigation, keep the progress indicator at the viewport's top. */
+.cl5-progress {scroll-margin-top:12px;}
+@media(max-width:760px) {
+  .cl5-page-title .cl5-kicker {font-size:19px;}
+  .cl5-task-heading {gap:9px;}
+  .cl5-task-heading .cl5-section-number {font-size:17px;}
+}

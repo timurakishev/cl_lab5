@@ -99,8 +99,8 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.hidden=true, 5000);
   }
   function header(title, number, prompt, lead='') {
-    return `<div class="cl5-section-number">Task ${number}</div>
-      <h2>${safe(title)}</h2>${lead ? `<p class="cl5-reference">${lead}</p>`:''}<p class="cl5-question">${prompt}</p>`;
+    return `<div class="cl5-task-heading"><div class="cl5-section-number">Task ${number}</div>
+      <h2>${safe(title)}</h2></div>${lead ? `<p class="cl5-reference">${lead}</p>`:''}<p class="cl5-question">${prompt}</p>`;
   }
   function input(key, label, placeholder='', options={}) {
     const val = safe(state[key] || '');
@@ -144,7 +144,7 @@
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name}: sources and content`,which==='A'?2:4,prompt)+
-      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools into answer fields. You may paste into names, corpus names, search queries and URL fields. Each blocked paste attempt in an answer field carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type all written answers yourself. Pasting is not allowed in text boxes that show a word count or minimum word requirement. You may paste into other fields, including student and corpus names, search queries and settings, tool names, and URLs. Each blocked paste attempt in a written answer carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
       textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
@@ -251,8 +251,8 @@
   function go(next) {
     state.step=Math.min(defs.length-1,Math.max(0,next));
     render();
-    // Keep the required-reading box at the top when changing tasks.
-    document.querySelector('.cl5-paper').scrollIntoView({behavior:'instant',block:'start'});
+    // Scroll after rendering and dialog focus changes, with the progress bar first.
+    requestAnimationFrame(() => document.querySelector('.cl5-progress').scrollIntoView({behavior:'instant',block:'start'}));
   }
   function requestTask(next) {
     if(state.step===0 && next>0){requestedFirstTask=next;$('#cl5-start-confirm').showModal();return;}
