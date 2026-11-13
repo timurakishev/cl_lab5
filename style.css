@@ -410,3 +410,22 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
   .cl5-page-numbers{gap:3px;}
   .cl5-page-number{min-width:30px;padding:2px 4px;}
 }
+/* Center the PDF download section on Task 8 */
+#cl5-work:has(#cl5-download) > h3:last-of-type {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+#cl5-work:has(#cl5-download) .cl5-final-buttons {
+  display: flex;
+  justify-content: center;
+}
+
+#cl5-work:has(#cl5-download) .cl5-final-buttons .cl5-btn {
+  width: auto;
+  max-width: 100%;
+}
+
+#cl5-work:has(#cl5-download) > .cl5-help {
+  text-align: center;
+}
