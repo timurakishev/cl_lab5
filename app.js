@@ -226,11 +226,11 @@
     const issues = validation();
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
     const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).reduce((n,key)=>n+screenshotsFor(key).length,0)} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
-    const disabled = issues.length || !state.consent ? 'disabled' : '';
+    const disabled = issues.length ? 'disabled' : '';
     return header('Review and submission',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
       `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
-      `<label class="cl5-consent"><input id="cl5-consent" type="checkbox" ${state.consent?'checked':''}><span>We wrote the answers ourselves and used our own screenshots.</span></label>`+
+      `<h3>Download your work</h3>`+
       `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF report</button></div>`+
       `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading.</p>`;
   }
@@ -279,7 +279,6 @@
     else if(el.dataset.criterion)state.criteria[el.dataset.criterion]=el.value;
     else if(el.dataset.criterionNote){state.criteriaNotes[el.dataset.criterionNote]=el.value;const counter=work.querySelector(`[data-note-count="${el.dataset.criterionNote}"]`);if(counter)counter.textContent=`${wordCount(el.value)} / 25 words`;}
     else if(el.hasAttribute('data-decision'))state.decision=el.value;
-    else if(el.id==='cl5-consent')state.consent=el.checked;
     autosave();
   }
   work.addEventListener('input',e=>{if(e.target.matches('input,textarea,select'))updateValue(e.target);});
@@ -368,7 +367,6 @@
   function readyToFinish() {
     const issues=validation();
     if(issues.length){toast('Complete the missing required fields first.');return false;}
-    if(!state.consent){toast('Confirm the declaration first.');return false;}
     return true;
   }
   async function downloadPdf(){

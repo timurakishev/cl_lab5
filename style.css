@@ -152,7 +152,7 @@ body.cl5-body { margin:0; min-height:100vh; background:#252a34; color:#e9e9ea; f
 body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;}
 .cl5-page {width:min(100% - 64px,1110px);padding-bottom:34px;}
 .cl5-pagehead {padding:22px 0 17px;}
-.cl5-course-label {font-size:15px;letter-spacing:0;}
+.cl5-course-label {font-size:17px;letter-spacing:0;}
 .cl5-app-label {font-size:13px;font-weight:600;letter-spacing:.095em;color:#9aa9b7;}
 .cl5-page-title {margin:38px 0 19px;}
 .cl5-kicker {font-size:14px;color:#98b8d1;margin-bottom:7px;letter-spacing:.11em;}

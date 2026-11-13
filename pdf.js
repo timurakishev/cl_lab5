@@ -177,7 +177,7 @@
       const choice=s.decision==='a'?m.corpusA:s.decision==='b'?m.corpusB:s.decision==='both'?'Depends on the research task':'Not selected';
       this.small('Preferred platform',choice);this.text(s.answer?.comparison||'No answer',{line:21});
       this.ensure(142);this.y+=15;this.rule(this.y,1,colors.faint);this.y+=26;this.text('Submission record',{size:15,bold:true,gap:12,line:23});
-      const pastes=Math.max(0,Number(s.pastes)||0);this.small('Academic declaration',s.consent?'Confirmed by students':'Not confirmed');
+      const pastes=Math.max(0,Number(s.pastes)||0);
       this.small('Blocked paste attempts (recorded locally)',String(pastes));
       this.small('Recorded deduction (subject to instructor review)',`${Math.min(pastes*50,100)} points`);
       this.pages.forEach((canvas,index)=>{
