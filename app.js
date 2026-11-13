@@ -145,7 +145,7 @@
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name} — sources and content`,which==='A'?2:4,prompt)+
-      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers, names and search queries; do not paste text from websites or AI tools. Pasting is permitted only in URL fields. Each blocked attempt, including a URL pasted into an answer, carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type your written answers; do not paste text from websites or AI tools into answer fields. You may paste into names, corpus names, search queries and URL fields. Each blocked paste attempt in an answer field carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
       textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
@@ -286,11 +286,11 @@
     }
     else if(target.id==='cl5-download')await downloadPdf();
   });
-  // URL fields are the only text fields that allow pasting. Browser-side
-  // detection is a deterrent, not proof of AI use or academic misconduct.
+  // Only written answer fields block pasting. Names, search queries, corpus
+  // names and URLs permit pasting. Browser-side detection is a deterrent, not proof.
   function pasteWarning(event) {
     const field=event.target;
-    if(!(field instanceof Element) || !field.matches('textarea, input[type="text"]'))return;
+    if(!(field instanceof Element) || !field.matches('textarea.cl5-writing'))return;
     event.preventDefault();
     const now=Date.now(); if(now-lastPasteAt<700)return; lastPasteAt=now;
     state.pastes++; state.pasteLog.push(new Date().toISOString()); autosave();
