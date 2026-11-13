@@ -134,11 +134,10 @@
   }
   function setup() {
     return header('Students and corpora',1,
-      "Enter both students' names and the two assigned corpora. Work together: both students should explore both platforms, discuss what they find, and then write their answers.") +
+      "Enter both of your names and the two assigned corpora. Explore both platforms together, discuss what you find, and write your answers. Read Table 1 of Akishev (2026) before starting.") +
       `<div class="cl5-duo">${input('name1','Student 1 — full name','',{required:true})}${input('name2','Student 2 — full name','',{required:true})}</div><hr class="cl5-rule">`+
       `<div class="cl5-duo">${input('aName','Corpus A — name','',{required:true})}${input('aUrl','Corpus A — website','https://',{type:'url',required:true})}</div>`+
-      `<div class="cl5-duo">${input('bName','Corpus B — name','',{required:true})}${input('bUrl','Corpus B — website','https://',{type:'url',required:true})}</div>`+
-      `<p class="cl5-help">Read Table 1 of Akishev (2026) before starting.</p>`;
+      `<div class="cl5-duo">${input('bName','Corpus B — name','',{required:true})}${input('bUrl','Corpus B — website','https://',{type:'url',required:true})}</div>`;
   }
   function profile(which) {
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
@@ -229,7 +228,7 @@
     const disabled = issues.length ? 'disabled' : '';
     return header('Review and submission',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
-      `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
+      `<h3>${issues.length?'Before submitting':'Report ready'}</h3>${issues.length?`<p class="cl5-incomplete">${issues.length} item${issues.length===1?'':'s'} need attention:</p><p class="cl5-help">You cannot download the completed PDF report until these items are resolved.</p><ul class="cl5-missing-list">${issues.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`:`<p class="cl5-complete">All required fields are complete.</p>`}`+
       `<h3>Download your work</h3>`+
       `<div class="cl5-final-buttons"><button type="button" class="cl5-btn cl5-btn-primary" id="cl5-download" ${disabled}>Download PDF report</button></div>`+
       `<p class="cl5-help">After downloading, email the PDF to <strong>${safe(CONFIG.instructorEmail||'t.akishev@kimep.kz')}</strong> for grading.</p>`;
