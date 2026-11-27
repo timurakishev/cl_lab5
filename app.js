@@ -143,7 +143,7 @@
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name}: sources and content`,which==='A'?2:4,prompt)+
-      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Type all written answers yourself. Pasting is not allowed in text boxes that show a word count or minimum word requirement. You may paste into other fields, including student and corpus names, search queries and settings, tool names, and URLs. Each blocked paste attempt in a written answer carries a <strong>50-point deduction</strong> (maximum 100). Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Write your answers yourself. You may paste individual words or short sentences into written answers (up to 120 characters and 20 words, on one line), including text in other scripts. Longer pastes are blocked and carry a <strong>50-point deduction</strong> (maximum 100). Pasting is allowed without restriction in names, search queries, settings, tool names, and URLs. Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
       textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
@@ -295,17 +295,30 @@
     }
     else if(target.id==='cl5-download')await downloadPdf();
   });
-  // Only written answer fields block pasting. Names, search queries, corpus
-  // names and URLs permit pasting. Browser-side detection is a deterrent, not proof.
+  // Short pastes in written answers are permitted, including foreign scripts.
+  // Names, search queries, settings, tool names and URLs remain unrestricted.
+  // Browser-side detection is a deterrent, not proof of misconduct.
+  const MAX_PASTE_CHARS=120;
+  const MAX_PASTE_WORDS=20;
   function pasteWarning(event) {
     const field=event.target;
     if(!(field instanceof Element) || !field.matches('textarea.cl5-writing'))return;
+    const pasted=event.clipboardData?.getData('text/plain') ??
+      event.dataTransfer?.getData('text/plain') ??
+      (typeof event.data==='string' ? event.data : null);
+    if(pasted===null)return;
+    const text=String(pasted).trim();
+    if(!text)return;
+    const length=Array.from(text).length;
+    const words=text.split(/\s+/u).length;
+    const hasLineBreak=/[\r\n\u2028\u2029]/u.test(text);
+    if(length<=MAX_PASTE_CHARS && words<=MAX_PASTE_WORDS && !hasLineBreak)return;
     event.preventDefault();
     const now=Date.now(); if(now-lastPasteAt<700)return; lastPasteAt=now;
     state.pastes++; state.pasteLog.push(new Date().toISOString()); autosave();
     const penaltyEl = $('#cl5-penalty');
     if (penaltyEl) penaltyEl.textContent = `Deduction: −${pasteDeduction()} points.`;
-    toast(`Paste blocked. −50 points. Remaining: ${remainingPoints()}/100. Attempt ${state.pastes} recorded.`);
+    toast(`Long paste blocked. −50 points. Remaining: ${remainingPoints()}/100. Attempt ${state.pastes} recorded.`);
   }
   work.addEventListener('paste',pasteWarning);
   work.addEventListener('drop',pasteWarning);
