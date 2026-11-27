@@ -164,8 +164,6 @@
       this.table(['FEATURE',m.corpusA,m.corpusB],m.features.map(([key,label])=>[label,s.features?.['a_'+key]||'Not tested',s.features?.['b_'+key]||'Not tested']));
       this.sub('Research support');
       this.table(['AREA',m.corpusA,m.corpusB],m.support.map(item=>[item.label,s.support?.['a_'+item.key]||'Not tested',s.support?.['b_'+item.key]||'Not tested']));
-      this.sub('Discussion');this.text(s.answer?.inventory||'No answer');this.small('Documentation / feature URL',s.source?.inventory);
-      await this.screenshot('inventory','Evidence - features and documentation');
       this.heading('Four-criteria evaluation','04');
       this.text('Based on Table 1 of Akishev (2026).',{size:12,color:colors.muted,gap:14});
       for(let i=0;i<m.criteria.length;i++){

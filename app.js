@@ -10,11 +10,11 @@
   const defs = [
     { key:'start', title:'Students and corpora', short:'Setup' },
     { key:'a_profile', title:'Sources and content', short:'Overview', min:80 },
-    { key:'a_trial', title:'Analytical features', short:'Analysis', min:120 },
+    { key:'a_trial', title:'Analytical features', short:'Analysis', min:80 },
     { key:'b_profile', title:'Sources and content', short:'Overview', min:80 },
-    { key:'b_trial', title:'Analytical features', short:'Analysis', min:120 },
-    { key:'inventory', title:'Features and documentation', min:120 },
-    { key:'comparison', title:'Interface evaluation', short:'Evaluation', min:140 },
+    { key:'b_trial', title:'Analytical features', short:'Analysis', min:80 },
+    { key:'inventory', title:'Features and documentation' },
+    { key:'comparison', title:'Interface evaluation', short:'Evaluation', min:80 },
     { key:'review', title:'Review and submission', short:'Report' },
   ];
   const criteria = [
@@ -151,7 +151,7 @@
     const prompt=`Explore all four analytical features discussed in Akishev (2026): frequency lists, concordances, keyword lists, and collocations. Test <strong>two</strong> of these features in <strong>${safe(name)}</strong>. Record the queries and settings, discuss what you found, and upload screenshots of both analyses. If a feature is unavailable, note that in Task 6.`;
     return header(`${name}: analytical features`,which==='A'?3:5,prompt)+
       `<div class="cl5-analysis-pair"><div class="cl5-analysis-item">${queryField(key,1)}${screenshotField(key,1)}</div><div class="cl5-analysis-item">${queryField(key,2)}${screenshotField(key,2)}</div></div>`+
-      textarea(key,120,'What did the two analyses show?','Explain the results of each analysis, what the tools showed, and any problems you encountered.');
+      textarea(key,80,'What did the two analyses show?','Explain the results of each analysis, what the tools showed, and any problems you encountered.');
   }
   function optionsHTML(options,selected) {
     return options.map(v=>`<option value="${safe(v)}" ${selected===v?'selected':''}>${safe(v)}</option>`).join('');
@@ -165,11 +165,9 @@
     const support=supportFeatures.map(x=>matrixRow(x.label,x.hint,'support',x.key,x.options)).join('');
     const columns=`<div class="cl5-feature-head"><span>What to check</span><span>${safe(corpusName('a'))}</span><span>${safe(corpusName('b'))}</span></div>`;
     return header('Features and documentation',6,
-      `Report on the four analytical features studied earlier for both platforms, then try two additional tools: n-gram analysis and subcorpus/metadata filters. Record which features are available, limited or missing. Check documentation, data sources, AI/NLP tools and reproducibility, and explain the main differences.`)+
+      `Report on the four analytical features studied earlier for both platforms, then try two additional tools: n-gram analysis and subcorpus/metadata filters. Record which features are available, limited or missing. Check documentation, data sources, AI/NLP tools and reproducibility.`)+
       `<div class="cl5-matrix"><section class="cl5-matrix-group" aria-label="Search and analytical features"><h3>Search and analytical features</h3>${columns}${tools}</section>`+
-      `<section class="cl5-matrix-group" aria-label="Research support"><h3>Research support</h3>${columns}${support}</section></div>`+
-      `<div class="cl5-writing-prompt"><strong>What did you find?</strong><span>Comment on the documentation, corpus sources, AI/NLP features (if any), and whether you could reproduce your searches. Include specific examples.</span></div>`+
-      textarea('inventory',120)+evidence('inventory',false,'Link to a guide for an analytical tool or feature assessed here, rather than the general corpus overview from Task 2 or 4.');
+      `<section class="cl5-matrix-group" aria-label="Research support"><h3>Research support</h3>${columns}${support}</section></div>`;
   }
   function criterionBlock(c,index) {
     const left=state.criteria['a_'+c.key]||c.options[0], right=state.criteria['b_'+c.key]||c.options[0], notes=state.criteriaNotes[c.key]||'';
@@ -189,7 +187,7 @@
       `<div class="cl5-criteria">${criteria.map(criterionBlock).join('')}</div>`+
       `<section class="cl5-criterion cl5-verdict"><div class="cl5-criterion-top"><span class="cl5-criterion-index">05</span><div><h3>Which platform would you use?</h3><p>Make a final choice based on the four criteria above.</p></div></div>`+
       `<div class="cl5-field"><label for="cl5-decision">Your choice</label><select id="cl5-decision" data-decision>${decisionOptions.map(([value,label])=>`<option value="${safe(value)}" ${state.decision===value?'selected':''}>${safe(label)}</option>`).join('')}</select></div>`+
-      `<div class="cl5-field"><label for="cl5-answer">Explain your choice</label><p class="cl5-question">Support your choice with evidence. Suggest one improvement for each platform and mention one limitation of your comparison.</p><textarea id="cl5-answer" class="cl5-writing" data-answer="comparison" spellcheck="true" placeholder="Compare the platforms and explain your decision.">${safe(state.answer.comparison||'')}</textarea><div class="cl5-count" data-short="${count('comparison')<140}"><span id="cl5-wc">${count('comparison')} words</span><span>Minimum: 140 words</span></div></div></section>`;
+      `<div class="cl5-field"><label for="cl5-answer">Explain your choice</label><p class="cl5-question">Support your choice with evidence. Suggest one improvement for each platform and mention one limitation of your comparison.</p><textarea id="cl5-answer" class="cl5-writing" data-answer="comparison" spellcheck="true" placeholder="Compare the platforms and explain your decision.">${safe(state.answer.comparison||'')}</textarea><div class="cl5-count" data-short="${count('comparison')<80}"><span id="cl5-wc">${count('comparison')} words</span><span>Minimum: 80 words</span></div></div></section>`;
   }
   function validation() {
     const issues=[];
@@ -199,8 +197,8 @@
       if (!isHttp(state[k])) issues.push(`Enter a valid ${label}.`);
     for (const d of defs.filter(x=>x.min))
       if (count(d.key)<d.min) issues.push(`${d.key==='comparison'?'Final decision':d.key==='inventory'?'Features and documentation':d.key.startsWith('a_')?corpusName('a')+': '+d.short:corpusName('b')+': '+d.short}: ${count(d.key)} / ${d.min} words.`);
-    for (const k of ['a_profile','b_profile','inventory'])
-      if (!isHttp(state.source[k])) issues.push(`${k==='inventory'?'Features and documentation':k==='comparison'?'Evaluation':k.startsWith('a_')?corpusName('a'):corpusName('b')}: add a source link.`);
+    for (const k of ['a_profile','b_profile'])
+      if (!isHttp(state.source[k])) issues.push(`${k.startsWith('a_')?corpusName('a'):corpusName('b')}: add a source link.`);
     for (const k of ['a_trial','b_trial']) {
       for(const i of [1,2]){
         if(!String(state.query[k+'_'+i]||'').trim())issues.push(`${k.startsWith('a_')?corpusName('a'):corpusName('b')}: add query ${i}.`);
@@ -224,7 +222,7 @@
   function review() {
     const issues = validation();
     const wordTotal=defs.filter(d=>d.min).reduce((n,d)=>n+count(d.key),0)+criteria.reduce((n,c)=>n+wordCount(state.criteriaNotes[c.key]),0);
-    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${Object.keys(state.screenshot).reduce((n,key)=>n+screenshotsFor(key).length,0)} screenshots · ${['a_profile','b_profile','inventory'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
+    const rows=[['Students',`${state.name1||'—'} / ${state.name2||'—'}`],['Platforms',`${corpusName('a')} / ${corpusName('b')}`],['Written work',`${wordTotal} words`],['Evidence',`${['a_profile','b_profile','a_trial_1','a_trial_2','b_trial_1','b_trial_2'].reduce((n,key)=>n+screenshotsFor(key).length,0)} screenshots · ${['a_profile','b_profile'].filter(k=>isHttp(state.source[k])).length} links`],['Paste deduction',`${pasteDeduction()} points (${state.pastes} recorded attempt${state.pastes===1?'':'s'})`]];
     const disabled = issues.length ? 'disabled' : '';
     return header('Review and submission',8,'Check your work and download the completed report.')+
       `<div class="cl5-aux-heading">Report summary</div><div class="cl5-report-overview">${rows.map(([a,b])=>`<div class="cl5-review-row"><strong>${safe(a)}</strong><span>${safe(b)}</span></div>`).join('')}</div>`+
