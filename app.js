@@ -143,7 +143,7 @@
     const side=which.toLowerCase(),key=side+'_profile', name=corpusName(side);
     const prompt=`Read the official information about <strong>${safe(name)}</strong>. Who compiled it? Which languages, years and types of texts does it cover? Where did the texts come from? Give its size, if stated. Note any missing details.`;
     return header(`${name}: sources and content`,which==='A'?2:4,prompt)+
-      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Write your answers yourself. You may paste individual words or short sentences into written answers (up to 120 characters and 20 words, on one line), including text in other scripts. Longer pastes are blocked and carry a <strong>50-point deduction</strong> (maximum 100). Pasting is allowed without restriction in names, search queries, settings, tool names, and URLs. Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
+      (which==='A' ? `<div class="cl5-integrity"><strong>Writing rule.</strong> Write your answers yourselves. You may paste individual words or short sentences into written answers (up to 120 characters and 20 words, on one line), including text in other scripts. Longer pastes are blocked and carry a <strong>50-point deduction</strong> (maximum 100). Pasting is allowed without restriction in names, search queries, settings, tool names, and URLs. Your progress is saved on this device. Contact your instructor if you need an accessibility accommodation.</div>`:'')+
       textarea(key,80)+evidence(key,false,'Paste a link to an official About, Description or Documentation page explaining the corpus content and data sources.');
   }
   function trial(which) {
