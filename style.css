@@ -204,7 +204,7 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 .cl5-writing-prompt span {font-size:16px;color:#b7c2cb;line-height:1.55;}
 .cl5-criteria {margin:6px 0 26px;}
 .cl5-criterion {border-top:1px solid #525d68;padding:26px 0 12px;}
-.cl5-criteria > .cl5-criterion:last-child {border-bottom:1px solid #525d68;}
+.cl5-criteria > .cl5-criterion:last-child {border-bottom:0;}
 .cl5-criterion-top {display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:start;margin-bottom:20px;}
 .cl5-criterion-index {color:#93b7d0;font-size:15px;letter-spacing:.06em;font-weight:700;margin-top:3px;}
 .cl5-criterion-top h3 {margin:0;font-size:21px;color:#eff4f7;}
