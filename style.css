@@ -202,7 +202,7 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 .cl5-writing-prompt {display:flex;flex-direction:column;gap:5px;margin:30px 0 18px;}
 .cl5-writing-prompt strong {font-size:18px;color:#edf2f6;}
 .cl5-writing-prompt span {font-size:16px;color:#b7c2cb;line-height:1.55;}
-.cl5-criteria {margin:6px 0 26px;}
+.cl5-criteria {margin:6px 0 0;}
 .cl5-criterion {border-top:1px solid #525d68;padding:26px 0 12px;}
 .cl5-criteria > .cl5-criterion:last-child {border-bottom:0;}
 .cl5-criterion-top {display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:start;margin-bottom:20px;}
@@ -346,7 +346,7 @@ body.cl5-body {font-size:18px;line-height:1.58;background:#252a34;color:#e8edf1;
 .cl5-foot .cl5-btn {min-width:145px;min-height:46px;text-align:center;font-weight:700;}
 .cl5-foot .cl5-btn:disabled {opacity:.45;cursor:default;}
 .cl5-confirm-actions {display:flex;justify-content:flex-end;gap:12px;margin-top:24px;}
-.cl5-verdict {margin-top:6px;padding-top:26px;}
+.cl5-verdict {margin-top:0;padding-top:26px;}
 .cl5-verdict .cl5-question {margin:5px 0 12px;font-size:16px;}
 .cl5-verdict>.cl5-field {max-width:none;}
 .cl5-verdict>.cl5-field:first-of-type {max-width:540px;}
